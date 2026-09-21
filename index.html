@@ -277,6 +277,65 @@ button.cream{
 
 <section id="setup" class="card hidden">
 
+  <h2>ゲームを作る</h2>
+
+  <label for="hostName">あなたの名前</label>
+
+  <input
+    id="hostName"
+    type="text"
+    maxlength="12"
+    placeholder="例：りこ"
+  >
+
+  <label for="count" style="margin-top:16px;">
+    参加人数
+  </label>
+
+  <input
+    id="count"
+    type="number"
+    min="2"
+    max="100"
+    value="4"
+  >
+
+  <button id="start">
+    ゲーム開始
+  </button>
+
+  <hr style="margin:24px 0;border:0;border-top:2px dashed var(--mint);">
+
+  <h2>ゲームに参加する</h2>
+
+  <label for="roomCode">ルームコード</label>
+
+  <input
+    id="roomCode"
+    type="text"
+    maxlength="6"
+    placeholder="例：ABC123"
+    style="text-transform:uppercase;"
+  >
+
+  <label for="playerName" style="margin-top:16px;">
+    あなたの名前
+  </label>
+
+  <input
+    id="playerName"
+    type="text"
+    maxlength="12"
+    placeholder="例：たろう"
+  >
+
+  <button id="join" class="secondary">
+    ゲームに参加
+  </button>
+
+</section>
+
+
 <!-- ローカルプレイ設定 -->
 
 <section id="localSetup" class="card hidden">
@@ -305,6 +364,7 @@ button.cream{
 
 </section>
 
+
 <!-- ローカル 名前入力 -->
 
 <section id="localNames" class="card hidden">
@@ -320,66 +380,6 @@ button.cream{
   <button id="localNamesNext">
     ゲームを始める
   </button>
-
-</section>
-  
-<h2>ゲームを作る</h2>
-
-<label for="hostName">あなたの名前</label>
-
-<input
-  id="hostName"
-  type="text"
-  maxlength="12"
-  placeholder="例：りこ"
->
-
-<label for="count" style="margin-top:16px;">
-参加人数
-</label>
-
-<input
-  id="count"
-  type="number"
-  min="2"
-  max="100"
-  value="4"
->
-
-<button id="start">
-ゲーム開始
-</button>
-
-
-<hr style="margin:24px 0;border:0;border-top:2px dashed var(--mint);">
-
-
-<h2>ゲームに参加する</h2>
-
-<label for="roomCode">ルームコード</label>
-
-<input
-  id="roomCode"
-  type="text"
-  maxlength="6"
-  placeholder="例：ABC123"
-  style="text-transform:uppercase;"
->
-
-<label for="playerName" style="margin-top:16px;">
-あなたの名前
-</label>
-
-<input
-  id="playerName"
-  type="text"
-  maxlength="12"
-  placeholder="例：たろう"
->
-
-<button id="join" class="secondary">
-ゲームに参加
-</button>
 
 </section>
 
@@ -564,7 +564,7 @@ $("localCountNext").onclick = () => {
     count > 100
   ){
 
-    alert("参加人数は2〜10人で入力してください");
+    alert("参加人数は2〜100人で入力してください");
 
     return;
 
@@ -748,15 +748,6 @@ function showLocalPlayer(){
 
 }
 
-
-
-$("onlinePlay").onclick = () => {
-
-  $("modeScreen").classList.add("hidden");
-
-  $("setup").classList.remove("hidden");
-
-};
 
 // 名前のチェック
 function validateName(name){
@@ -1271,8 +1262,11 @@ if(room.phase === "discussion"){
 
 $("reveal").onclick = () => {
 
+  // ====================
   // ローカルプレイ
-  if(localCurrentPlayer < localPlayers.length){
+  // ====================
+
+  if(gameMode === "local"){
 
     const player =
       localPlayers[localCurrentPlayer];
@@ -1280,20 +1274,18 @@ $("reveal").onclick = () => {
     $("num").textContent =
       player.number;
 
-    $("hint").textContent =
-      "数字を覚えたら、隠して次のプレイヤーへ";
-
-    $("reveal").classList.add("hidden");
-
-    $("next").classList.remove("hidden");
-
-    return;
-
   }
 
+  // ====================
   // オンラインプレイ
-  $("num").textContent =
-    myNumber;
+  // ====================
+
+  else{
+
+    $("num").textContent =
+      myNumber;
+
+  }
 
   $("hint").textContent =
     "数字を覚えたら、隠して次のプレイヤーへ";
@@ -1303,7 +1295,6 @@ $("reveal").onclick = () => {
   $("next").classList.remove("hidden");
 
 };
-
 
 $("next").onclick = async () => {
 
@@ -1414,10 +1405,26 @@ $("next").onclick = async () => {
 
 function showLocalResults(){
 
-  const container =
-    $("resultCards");
+  $("all").innerHTML = "";
 
-  container.innerHTML = "";
+  const title =
+    document.createElement("div");
+
+  title.className =
+    "discussion-title";
+
+  title.textContent =
+    "答え合わせする";
+
+  $("all").appendChild(title);
+
+
+  const cardsContainer =
+    document.createElement("div");
+
+  cardsContainer.className =
+    "cards-container";
+
 
   localPlayers.forEach(player => {
 
@@ -1427,29 +1434,62 @@ function showLocalResults(){
     card.className =
       "result-card";
 
+
     card.innerHTML = `
-      <div class="result-name">
-        ${player.name}
+
+      <div class="card-inner">
+
+        <div class="card-face card-back">
+
+          <div class="card-player">
+            ${player.name}
+          </div>
+
+          <div class="card-symbol">
+            ?
+          </div>
+
+          <div class="card-tap">
+            タップしてめくる
+          </div>
+
+        </div>
+
+
+        <div class="card-face card-front">
+
+          <div class="card-player">
+            ${player.name}
+          </div>
+
+          <div class="result-number">
+            ${player.number}
+          </div>
+
+          <div class="card-tap">
+            タップで裏返す
+          </div>
+
+        </div>
+
       </div>
 
-      <div class="result-number">
-        ?
-      </div>
     `;
 
-    card.onclick = () => {
 
-      const number =
-        card.querySelector(".result-number");
+    card.addEventListener("click", () => {
 
-      number.textContent =
-        player.number;
+      card.classList.toggle("flipped");
 
-    };
+    });
 
-    container.appendChild(card);
+
+    cardsContainer.appendChild(card);
 
   });
+
+
+  $("all").appendChild(cardsContainer);
 
 }
 
@@ -1558,13 +1598,23 @@ async function showResults(){
 }
 
 
-$("new").onclick=()=>{
+$("new").onclick = () => {
 
   $("game").classList.add("hidden");
 
   $("setup").classList.add("hidden");
 
+  $("localSetup").classList.add("hidden");
+
+  $("localNames").classList.add("hidden");
+
   $("modeScreen").classList.remove("hidden");
+
+  gameMode = "";
+
+  localPlayers = [];
+
+  localCurrentPlayer = 0;
 
 };
 
