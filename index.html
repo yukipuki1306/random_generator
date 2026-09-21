@@ -721,57 +721,6 @@ async function joinRoom(){
 }
 
 
-  const { data: room, error } =
-    await supabaseClient
-      .from("rooms")
-      .select("*")
-      .eq("room_code", roomCode)
-      .single();
-
-
-  if(error || !room){
-
-    console.error("ルーム検索エラー:", error);
-
-    alert(
-      "そのルームが見つかりませんでした\n\n" +
-      "ルームコードを確認してください"
-    );
-
-    return;
-
-  }
-
-
-  console.log("参加するルーム:", room);
-
-
-  // 部屋の情報を使う
-  n = room.player_count;
-  p = room.current_player;
-
-
-  // ゲーム画面へ
-  $("setup").classList.add("hidden");
-  $("game").classList.remove("hidden");
-  $("results").classList.add("hidden");
-
-
-  // お題を表示
-  $("topic").textContent = room.topic;
-
-
-  update();
-
-
-  alert(
-    "ゲームに参加しました！\n\n" +
-    "ルームコード: " + roomCode
-  );
-
-}
-
-
 $("join").onclick=joinRoom;
 
 
