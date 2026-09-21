@@ -614,6 +614,7 @@ if(playerError){
 myNumber = nums[0];
 
 myPlayerNumber = 1;
+myPlayerName = playerName;
 
 console.log("PLAYER 1 登録成功");
 
@@ -630,11 +631,16 @@ $("results").classList.add("hidden");
 $("topic").textContent = selectedTopic;
 
 update();
-subscribeToRoom(roomCode);  
-  alert(
-    "部屋を作りました！\n\n" +
-    "ルームコード: " + roomCode
-  );
+
+$("player").textContent =
+  `${myPlayerName} / ${n}`;
+
+subscribeToRoom(roomCode);
+
+alert(
+  "部屋を作りました！\n\n" +
+  "ルームコード: " + roomCode
+);
 
 }
 
@@ -794,6 +800,7 @@ async function joinRoom(){
 n = room.player_count;
 p = room.current_player;
 myPlayerNumber = playerNumber;
+myPlayerName = playerName;
 
 // 自分の数字を保存
 nums = [myNumber];
@@ -814,7 +821,7 @@ subscribeToRoom(roomCode);
 
   // プレイヤー表示
   $("player").textContent =
-    `プレイヤー ${playerNumber} / ${n}`;
+  `${playerName} / ${n}`;
 
 
   $("num").textContent = "?";
@@ -831,6 +838,35 @@ subscribeToRoom(roomCode);
   `${playerName} として参加しました！\n\n` +
   "ルームコード: " + roomCode
 );
+
+}
+
+
+
+async function showCurrentPlayerName(){
+
+  const { data: player, error } = await supabaseClient
+    .from("players")
+    .select("name")
+    .eq("room_code", roomCode)
+    .eq("player_number", p + 1)
+    .single();
+
+
+  if(error || !player){
+
+    console.error("現在のプレイヤー名取得エラー:", error);
+
+    $("player").textContent =
+      `プレイヤー ${p + 1} / ${n}`;
+
+    return;
+
+  }
+
+
+  $("player").textContent =
+    `${player.name} / ${n}`;
 
 }
 
@@ -1047,16 +1083,15 @@ async function showResults(){
         </div>
 
 
-        <div class="card-face card-front">
+       <div class="card-face card-front">
 
-          <div class="card-player">
-            PLAYER ${player.player_number}
-          </div>
+  <div class="card-player">
+    ${player.name}
+  </div>
 
-          <div class="result-number">
-            ${player.number}
-          </div>
-
+  <div class="result-number">
+    ${player.number}
+  </div>
           <div class="card-tap">
             タップで裏返す
           </div>
