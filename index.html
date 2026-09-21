@@ -533,12 +533,14 @@ console.log("PLAYER 1 登録成功");
 
 // 画面をゲーム画面にする
 $("setup").classList.add("hidden");
+$("game").classList.remove("hidden");
+$("results").classList.add("hidden");
 
-  // お題を表示
-  $("topic").textContent =
-    topics[Math.floor(Math.random()*topics.length)];
+// お題を表示
+$("topic").textContent =
+  topics[Math.floor(Math.random()*topics.length)];
 
-  update();
+update();
 
   alert(
     "部屋を作りました！\n\n" +
