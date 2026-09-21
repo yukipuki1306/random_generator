@@ -891,53 +891,6 @@ $("next").onclick=async ()=>{
 
 };
 
-  // 自分の番が終わったら、次のプレイヤーへ
-  if(p < n - 1){
-
-    const nextPlayer = p + 1;
-
-    const { error } = await supabaseClient
-      .from("rooms")
-      .update({
-        current_player: nextPlayer
-      })
-      .eq("room_code", roomCode);
-
-    if(error){
-
-      console.error("次のプレイヤーへの更新に失敗:", error);
-
-      alert(
-        "次のプレイヤーへの更新に失敗しました\n\n" +
-        error.message
-      );
-
-    }
-
-  }else{
-
-    // 最後のプレイヤーが終わったら、話し合いフェーズへ
-    const { error } = await supabaseClient
-      .from("rooms")
-      .update({
-        phase: "discussion"
-      })
-      .eq("room_code", roomCode);
-
-    if(error){
-
-      console.error("話し合いフェーズへの更新に失敗:", error);
-
-      alert(
-        "ゲーム状態の更新に失敗しました\n\n" +
-        error.message
-      );
-
-    }
-
-  }
-
-};
 
 
 async function showResults(){
