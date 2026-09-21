@@ -1,5 +1,8 @@
 <!doctype html>
 <html lang="ja">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -323,7 +326,13 @@ button.cream{
 
 
 <script>
+const SUPABASE_URL = "https://bazwhgfvwhxlhgokgqua.supabase.co";
+const SUPABASE_KEY = "sb_publishable_NtgU7zYl7CmS5f7hTMcmQw_CZ5HdOVc";
 
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 const topics = [
 "好きな食べ物",
 "怖いもの",
