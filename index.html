@@ -347,11 +347,19 @@ async function testSupabase(){
     })
     .select();
 
-  if(error){
-    console.error("Supabase接続エラー:", error);
-    alert("Supabase接続に失敗しました。");
-    return;
-  }
+ if(error){
+  console.error("Supabase接続エラー:", error);
+
+  alert(
+    "Supabase接続エラー\n\n" +
+    "code: " + error.code + "\n" +
+    "message: " + error.message + "\n" +
+    "details: " + error.details + "\n" +
+    "hint: " + error.hint
+  );
+
+  return;
+}
 
   console.log("Supabase接続成功:", data);
   alert("Supabase接続成功！");
