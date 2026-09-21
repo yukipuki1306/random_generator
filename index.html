@@ -333,6 +333,32 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
+
+async function testSupabase(){
+
+  const { data, error } = await supabaseClient
+    .from("rooms")
+    .insert({
+      room_code: "TEST",
+      topic: "テスト",
+      player_count: 4,
+      current_player: 0,
+      phase: "waiting"
+    })
+    .select();
+
+  if(error){
+    console.error("Supabase接続エラー:", error);
+    alert("Supabase接続に失敗しました。");
+    return;
+  }
+
+  console.log("Supabase接続成功:", data);
+  alert("Supabase接続成功！");
+}
+
+testSupabase();
+  
 const topics = [
 "好きな食べ物",
 "怖いもの",
