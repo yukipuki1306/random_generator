@@ -437,7 +437,7 @@ function update(){
 }
 
 
-function start(){
+async function start(){
 
   n=Math.max(
     2,
@@ -447,6 +447,11 @@ function start(){
     )
   );
 
+  // ルームコードを作る
+  const roomCode =
+    Math.random().toString(36).substring(2,8).toUpperCase();
+
+  // 数字を作る
   nums=shuffle(
     Array.from(
       {length:100},
@@ -456,15 +461,49 @@ function start(){
 
   p=0;
 
+  // Supabaseに部屋を作る
+  const { data, error } = await supabaseClient
+    .from("rooms")
+    .insert({
+      room_code: roomCode,
+      topic: topics[Math.floor(Math.random()*topics.length)],
+      player_count: n,
+      current_player: 0,
+      phase: "playing"
+    })
+    .select("room_code")
+    .single();
+
+  if(error){
+
+    console.error("部屋作成エラー:", error);
+
+    alert(
+      "部屋を作れませんでした\n\n" +
+      "code: " + error.code + "\n" +
+      "message: " + error.message
+    );
+
+    return;
+  }
+
+  console.log("部屋作成成功:", roomCode);
+
+  // 画面をゲーム画面にする
   $("setup").classList.add("hidden");
-
   $("game").classList.remove("hidden");
-
   $("results").classList.add("hidden");
 
-  topic();
+  // お題を表示
+  $("topic").textContent =
+    topics[Math.floor(Math.random()*topics.length)];
 
   update();
+
+  alert(
+    "部屋を作りました！\n\n" +
+    "ルームコード: " + roomCode
+  );
 
 }
 
