@@ -454,17 +454,15 @@ async function start(){
   p=0;
 
   // Supabaseに部屋を作る
-  const { data, error } = await supabaseClient
-    .from("rooms")
-    .insert({
-      room_code: roomCode,
-      topic: topics[Math.floor(Math.random()*topics.length)],
-      player_count: n,
-      current_player: 0,
-      phase: "playing"
-    })
-    .select("room_code")
-    .single();
+  const { error } = await supabaseClient
+  .from("rooms")
+  .insert({
+    room_code: roomCode,
+    topic: topics[Math.floor(Math.random()*topics.length)],
+    player_count: n,
+    current_player: 0,
+    phase: "playing"
+  });
 
   if(error){
 
