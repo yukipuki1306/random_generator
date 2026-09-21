@@ -244,10 +244,98 @@ button.cream{
 
 <main class="wrap">
 
-<h1>ナラベル！</h1>
-<p class="sub">みんなで数字を当てるゲーム</p>
+<!-- モード選択 -->
 
-<section id="setup" class="card">
+<section id="modeScreen">
+
+<h1>ナラベル！</h1>
+
+<p class="sub">
+みんなで数字を当てるゲーム
+</p>
+
+<div class="card">
+
+<h2 style="text-align:center;">
+遊び方を選んでね
+</h2>
+
+<button id="localPlay">
+📱 ローカルプレイ
+</button>
+
+<button id="onlinePlay" class="secondary">
+🌐 オンラインプレイ
+</button>
+
+</div>
+
+</section>
+
+
+<!-- オンラインプレイの設定 -->
+
+<section id="setup" class="card hidden">
+
+<h2>ゲームを作る</h2>
+
+<label for="hostName">あなたの名前</label>
+
+<input
+  id="hostName"
+  type="text"
+  maxlength="12"
+  placeholder="例：りこ"
+>
+
+<label for="count" style="margin-top:16px;">
+参加人数
+</label>
+
+<input
+  id="count"
+  type="number"
+  min="2"
+  max="100"
+  value="4"
+>
+
+<button id="start">
+ゲーム開始
+</button>
+
+
+<hr style="margin:24px 0;border:0;border-top:2px dashed var(--mint);">
+
+
+<h2>ゲームに参加する</h2>
+
+<label for="roomCode">ルームコード</label>
+
+<input
+  id="roomCode"
+  type="text"
+  maxlength="6"
+  placeholder="例：ABC123"
+  style="text-transform:uppercase;"
+>
+
+<label for="playerName" style="margin-top:16px;">
+あなたの名前
+</label>
+
+<input
+  id="playerName"
+  type="text"
+  maxlength="12"
+  placeholder="例：たろう"
+>
+
+<button id="join" class="secondary">
+ゲームに参加
+</button>
+
+</section>
 
 <h2>ゲームを作る</h2>
 
@@ -434,6 +522,23 @@ let roomCode = "";
 
 const $ = id => document.getElementById(id);
 
+// ====================
+// モード選択
+// ====================
+
+$("localPlay").onclick = () => {
+
+  alert("ローカルプレイは次に作ります！");
+
+};
+
+$("onlinePlay").onclick = () => {
+
+  $("modeScreen").classList.add("hidden");
+
+  $("setup").classList.remove("hidden");
+
+};
 
 // 名前のチェック
 function validateName(name){
@@ -1124,7 +1229,9 @@ $("new").onclick=()=>{
 
   $("game").classList.add("hidden");
 
-  $("setup").classList.remove("hidden");
+  $("setup").classList.add("hidden");
+
+  $("modeScreen").classList.remove("hidden");
 
 };
 
