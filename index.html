@@ -539,26 +539,10 @@ if(playerError){
 // PLAYER 1の数字を保存
 myNumber = nums[0];
 
-
 console.log("PLAYER 1 登録成功");
 
 
-if(playerError){
-
-  console.error("プレイヤー登録エラー:", playerError);
-
-  alert(
-    "プレイヤー登録に失敗しました\n\n" +
-    "code: " + playerError.code + "\n" +
-    "message: " + playerError.message
-  );
-
-  return;
-
-}
-
-
-console.log("PLAYER 1 登録成功");
+// 画面をゲーム画面にする
 
 
 // 画面をゲーム画面にする
@@ -584,7 +568,7 @@ $("start").onclick=start;
 
 async function joinRoom(){
 
-  const roomCode =
+  roomCode =
     $("roomCode").value.trim().toUpperCase();
 
 
@@ -979,15 +963,6 @@ async function showResults(){
 
     });
 
-
-    cardsContainer.appendChild(card);
-
-  });
-
-
-  $("all").appendChild(cardsContainer);
-
-}
 
     cardsContainer.appendChild(card);
 
