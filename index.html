@@ -344,8 +344,7 @@ async function testSupabase(){
       player_count: 4,
       current_player: 0,
       phase: "waiting"
-    })
-    .select();
+    });
 
  if(error){
   console.error("Supabase接続エラー:", error);
