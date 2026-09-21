@@ -248,6 +248,8 @@ button.cream{
 
 <section id="setup" class="card">
 
+<h2>ゲームを作る</h2>
+
 <label for="count">参加人数</label>
 
 <input
@@ -259,6 +261,26 @@ button.cream{
 >
 
 <button id="start">ゲーム開始</button>
+
+
+<hr style="margin:24px 0;border:0;border-top:2px dashed var(--mint);">
+
+
+<h2>ゲームに参加する</h2>
+
+<label for="roomCode">ルームコード</label>
+
+<input
+  id="roomCode"
+  type="text"
+  maxlength="6"
+  placeholder="例：ABC123"
+  style="text-transform:uppercase;"
+>
+
+<button id="join" class="secondary">
+ゲームに参加
+</button>
 
 </section>
 
@@ -499,6 +521,74 @@ async function start(){
 
 
 $("start").onclick=start;
+
+
+async function joinRoom(){
+
+  const roomCode =
+    $("roomCode").value.trim().toUpperCase();
+
+  if(!roomCode){
+
+    alert("ルームコードを入力してください");
+
+    return;
+
+  }
+
+
+  const { data: room, error } =
+    await supabaseClient
+      .from("rooms")
+      .select("*")
+      .eq("room_code", roomCode)
+      .single();
+
+
+  if(error || !room){
+
+    console.error("ルーム検索エラー:", error);
+
+    alert(
+      "そのルームが見つかりませんでした\n\n" +
+      "ルームコードを確認してください"
+    );
+
+    return;
+
+  }
+
+
+  console.log("参加するルーム:", room);
+
+
+  // 部屋の情報を使う
+  n = room.player_count;
+  p = room.current_player;
+
+
+  // ゲーム画面へ
+  $("setup").classList.add("hidden");
+  $("game").classList.remove("hidden");
+  $("results").classList.add("hidden");
+
+
+  // お題を表示
+  $("topic").textContent = room.topic;
+
+
+  update();
+
+
+  alert(
+    "ゲームに参加しました！\n\n" +
+    "ルームコード: " + roomCode
+  );
+
+}
+
+
+$("join").onclick=joinRoom;
 
 
 $("retopic").onclick=topic;
