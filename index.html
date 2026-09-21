@@ -138,6 +138,19 @@ button.cream{
   display:none
 }
 
+.back-button{
+  background:none;
+  border:none;
+  padding:4px 0;
+  margin-top:0;
+  margin-bottom:12px;
+  color:var(--text);
+  font-size:14px;
+  cursor:pointer;
+  text-align:left;
+  box-shadow:none;
+}
+
 /* 答え合わせカード */
 
 .discussion-title{
@@ -343,12 +356,12 @@ button.cream{
 <!-- ローカルプレイ設定 -->
 
 <section id="localSetup" class="card hidden">
-
+  
+<button id="localSetupBack" class="back-button">
+← 戻る
+</button>
+  
   <h2>ローカルプレイ</h2>
-
-  <p class="sub">
-    みんなで使うスマホを1台用意してね
-  </p>
 
   <label for="localCount">
     参加人数
@@ -373,6 +386,10 @@ button.cream{
 
 <section id="localNames" class="card hidden">
 
+ <button id="localNamesBack" class="back-button">
+← 戻る
+</button> 
+  
   <h2>みんなの名前</h2>
 
   <p class="sub">
@@ -539,6 +556,28 @@ $("localPlay").onclick = () => {
   $("modeScreen").classList.add("hidden");
 
   $("setup").classList.add("hidden");
+  $("localSetup").classList.remove("hidden");
+
+};
+
+
+// ローカル：参加人数画面から戻る
+
+$("localSetupBack").onclick = () => {
+
+  $("localSetup").classList.add("hidden");
+
+  $("modeScreen").classList.remove("hidden");
+
+};
+
+
+// ローカル：名前入力画面から戻る
+
+$("localNamesBack").onclick = () => {
+
+  $("localNames").classList.add("hidden");
+
   $("localSetup").classList.remove("hidden");
 
 };
