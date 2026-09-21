@@ -405,8 +405,10 @@ const topics = [
 ];
 
 let nums = [];
+let myNumber = null;
 let p = 0;
 let n = 4;
+let roomCode = "";
 
 
 const $ = id => document.getElementById(id);
@@ -462,8 +464,8 @@ async function start(){
   );
 
   // ルームコードを作る
-  const roomCode =
-    Math.random().toString(36).substring(2,8).toUpperCase();
+  roomCode =
+  Math.random().toString(36).substring(2,8).toUpperCase();
 
   // 数字を作る
   nums=shuffle(
@@ -510,6 +512,7 @@ const { error: playerError } = await supabaseClient
     player_number: 1,
     name: "PLAYER 1",
     number: nums[0]
+    myNumber = nums[0];
   });
 
 
@@ -541,7 +544,7 @@ $("topic").textContent =
   topics[Math.floor(Math.random()*topics.length)];
 
 update();
-
+subscribeToRoom(roomCode);  
   alert(
     "部屋を作りました！\n\n" +
     "ルームコード: " + roomCode
@@ -684,10 +687,13 @@ async function joinRoom(){
 
   // 自分のゲーム情報
   n = room.player_count;
-  p = playerNumber - 1;
+p = room.current_player;
 
-  // 自分の数字だけ、今の画面用に保存
-  nums = [myNumber];
+// 自分の数字を保存
+nums = [myNumber];
+
+// Realtime監視開始
+subscribeToRoom(roomCode);
 
 
   // ゲーム画面へ
@@ -723,15 +729,75 @@ async function joinRoom(){
 }
 
 
-$("join").onclick=joinRoom;
+let roomChannel = null;
 
+function subscribeToRoom(roomCode){
 
-$("retopic").onclick=topic;
+  if(roomChannel){
+    supabaseClient.removeChannel(roomChannel);
+  }
+
+  roomChannel = supabaseClient
+    .channel("room-" + roomCode)
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "rooms",
+        filter: "room_code=eq." + roomCode
+      },
+      payload => {
+
+        console.log("ルーム更新:", payload.new);
+
+        const room = payload.new;
+
+        p = room.current_player;
+
+        if(room.phase === "playing"){
+
+  $("player").textContent =
+    `プレイヤー ${p + 1} / ${n}`;
+
+  $("num").textContent = "?";
+
+  $("hint").textContent =
+    "自分の数字を確認してください";
+
+  $("reveal").classList.remove("hidden");
+  $("next").classList.add("hidden");
+
+}
+
+if(room.phase === "discussion"){
+
+  $("player").textContent = "話し合い中…";
+
+  $("num").textContent = "💬";
+
+  $("hint").textContent =
+    "みんなで数字の順番を予想してみよう！";
+
+  $("reveal").classList.add("hidden");
+  $("next").classList.add("hidden");
+
+  $("results").classList.remove("hidden");
+
+  showResults();
+
+}
+
+      }
+    )
+    .subscribe();
+
+}
 
 
 $("reveal").onclick=()=>{
 
-  $("num").textContent=nums[p];
+  $("num").textContent=myNumber;
 
   $("hint").textContent =
     "数字を覚えたら、隠して次のプレイヤーへ";
@@ -743,30 +809,51 @@ $("reveal").onclick=()=>{
 };
 
 
-$("next").onclick=()=>{
+$("next").onclick=async ()=>{
 
-  if(p<n-1){
+  // 自分の番が終わったら、次のプレイヤーへ
+  if(p < n - 1){
 
-    p++;
+    const nextPlayer = p + 1;
 
-    update();
+    const { error } = await supabaseClient
+      .from("rooms")
+      .update({
+        current_player: nextPlayer
+      })
+      .eq("room_code", roomCode);
+
+    if(error){
+
+      console.error("次のプレイヤーへの更新に失敗:", error);
+
+      alert(
+        "次のプレイヤーへの更新に失敗しました\n\n" +
+        error.message
+      );
+
+    }
 
   }else{
 
-    $("player").textContent="話し合い中…";
+    // 最後のプレイヤーが終わったら、話し合いフェーズへ
+    const { error } = await supabaseClient
+      .from("rooms")
+      .update({
+        phase: "discussion"
+      })
+      .eq("room_code", roomCode);
 
-    $("num").textContent="💬";
+    if(error){
 
-    $("hint").textContent =
-      "みんなで数字の順番を予想してみよう！";
+      console.error("話し合いフェーズへの更新に失敗:", error);
 
-    $("reveal").classList.add("hidden");
+      alert(
+        "ゲーム状態の更新に失敗しました\n\n" +
+        error.message
+      );
 
-    $("next").classList.add("hidden");
-
-    $("results").classList.remove("hidden");
-
-    showResults();
+    }
 
   }
 
