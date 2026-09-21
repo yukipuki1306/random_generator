@@ -334,37 +334,13 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_KEY
 );
 
-async function testSupabase(){
+const SUPABASE_URL = "...";
+const SUPABASE_KEY = "...";
 
-  const { data, error } = await supabaseClient
-    .from("rooms")
-    .insert({
-      room_code: "TEST",
-      topic: "テスト",
-      player_count: 4,
-      current_player: 0,
-      phase: "waiting"
-    });
-
- if(error){
-  console.error("Supabase接続エラー:", error);
-
-  alert(
-    "Supabase接続エラー\n\n" +
-    "code: " + error.code + "\n" +
-    "message: " + error.message + "\n" +
-    "details: " + error.details + "\n" +
-    "hint: " + error.hint
-  );
-
-  return;
-}
-
-  console.log("Supabase接続成功:", data);
-  alert("Supabase接続成功！");
-}
-
-testSupabase();
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);;
   
 const topics = [
 "好きな食べ物",
