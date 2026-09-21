@@ -556,6 +556,7 @@ async function joinRoom(){
   const roomCode =
     $("roomCode").value.trim().toUpperCase();
 
+
   if(!roomCode){
 
     alert("ルームコードを入力してください");
@@ -563,6 +564,161 @@ async function joinRoom(){
     return;
 
   }
+
+
+  // ルームを検索
+  const { data: room, error: roomError } =
+    await supabaseClient
+      .from("rooms")
+      .select("*")
+      .eq("room_code", roomCode)
+      .single();
+
+
+  if(roomError || !room){
+
+    console.error("ルーム検索エラー:", roomError);
+
+    alert(
+      "そのルームが見つかりませんでした\n\n" +
+      "ルームコードを確認してください"
+    );
+
+    return;
+
+  }
+
+
+  // 現在の参加者を取得
+  const { data: players, error: playersError } =
+    await supabaseClient
+      .from("players")
+      .select("*")
+      .eq("room_code", roomCode);
+
+
+  if(playersError){
+
+    console.error("参加者取得エラー:", playersError);
+
+    alert(
+      "参加者情報を取得できませんでした\n\n" +
+      "code: " + playersError.code + "\n" +
+      "message: " + playersError.message
+    );
+
+    return;
+
+  }
+
+
+  // 次のプレイヤー番号
+  const playerNumber = players.length + 1;
+
+
+  // 定員オーバーを防ぐ
+  if(playerNumber > room.player_count){
+
+    alert("このゲームはすでに満員です");
+
+    return;
+
+  }
+
+
+  // 自分に割り当てる数字
+  const availableNumbers =
+    shuffle(
+      Array.from(
+        {length:100},
+        (_,i)=>i+1
+      )
+    );
+
+
+  // すでに使われている数字を除外
+  const usedNumbers =
+    players.map(player => player.number);
+
+
+  const myNumber =
+    availableNumbers.find(
+      number => !usedNumbers.includes(number)
+    );
+
+
+  // PLAYERとして登録
+  const { error: playerError } =
+    await supabaseClient
+      .from("players")
+      .insert({
+        room_code: roomCode,
+        player_number: playerNumber,
+        name: `PLAYER ${playerNumber}`,
+        number: myNumber
+      });
+
+
+  if(playerError){
+
+    console.error("プレイヤー登録エラー:", playerError);
+
+    alert(
+      "プレイヤー登録に失敗しました\n\n" +
+      "code: " + playerError.code + "\n" +
+      "message: " + playerError.message
+    );
+
+    return;
+
+  }
+
+
+  console.log(
+    `PLAYER ${playerNumber} 登録成功`,
+    myNumber
+  );
+
+
+  // 自分のゲーム情報
+  n = room.player_count;
+  p = playerNumber - 1;
+
+  // 自分の数字だけ、今の画面用に保存
+  nums = [myNumber];
+
+
+  // ゲーム画面へ
+  $("setup").classList.add("hidden");
+  $("game").classList.remove("hidden");
+  $("results").classList.add("hidden");
+
+
+  // お題を表示
+  $("topic").textContent = room.topic;
+
+
+  // プレイヤー表示
+  $("player").textContent =
+    `プレイヤー ${playerNumber} / ${n}`;
+
+
+  $("num").textContent = "?";
+
+  $("hint").textContent =
+    "自分の数字を確認してください";
+
+  $("reveal").classList.remove("hidden");
+
+  $("next").classList.add("hidden");
+
+
+  alert(
+    `PLAYER ${playerNumber} として参加しました！\n\n` +
+    "ルームコード: " + roomCode
+  );
+
+}
 
 
   const { data: room, error } =
