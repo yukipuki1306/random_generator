@@ -277,6 +277,52 @@ button.cream{
 
 <section id="setup" class="card hidden">
 
+<!-- ローカルプレイ設定 -->
+
+<section id="localSetup" class="card hidden">
+
+  <h2>ローカルプレイ</h2>
+
+  <p class="sub">
+    みんなで使うスマホを1台用意してね
+  </p>
+
+  <label for="localCount">
+    参加人数
+  </label>
+
+  <input
+    id="localCount"
+    type="number"
+    min="2"
+    max="100"
+    value="4"
+  >
+
+  <button id="localCountNext">
+    次へ
+  </button>
+
+</section>
+
+<!-- ローカル 名前入力 -->
+
+<section id="localNames" class="card hidden">
+
+  <h2>みんなの名前</h2>
+
+  <p class="sub">
+    順番に名前を入力してね
+  </p>
+
+  <div id="localNameInputs"></div>
+
+  <button id="localNamesNext">
+    ゲームを始める
+  </button>
+
+</section>
+  
 <h2>ゲームを作る</h2>
 
 <label for="hostName">あなたの名前</label>
@@ -465,6 +511,16 @@ let p = 0;
 let n = 4;
 let roomCode = "";
 
+// ====================
+// ローカルプレイ用
+// ====================
+
+let gameMode = "";
+
+let localPlayers = [];
+let localCurrentPlayer = 0;
+let localTopic = "";
+
 
 const $ = id => document.getElementById(id);
 
@@ -474,9 +530,225 @@ const $ = id => document.getElementById(id);
 
 $("localPlay").onclick = () => {
 
-  alert("ローカルプレイは次に作ります！");
+  gameMode = "local";
+
+  $("modeScreen").classList.add("hidden");
+
+  $("setup").classList.add("hidden");
+  $("localSetup").classList.remove("hidden");
 
 };
+
+$("onlinePlay").onclick = () => {
+
+  gameMode = "online";
+
+  $("modeScreen").classList.add("hidden");
+
+  $("setup").classList.remove("hidden");
+
+};
+
+// ====================
+// ローカル：人数決定
+// ====================
+
+$("localCountNext").onclick = () => {
+
+  const count =
+    Number($("localCount").value);
+
+  if(
+    !Number.isInteger(count) ||
+    count < 2 ||
+    count > 100
+  ){
+
+    alert("参加人数は2〜10人で入力してください");
+
+    return;
+
+  }
+
+  n = count;
+
+  createLocalNameInputs();
+
+  $("localSetup").classList.add("hidden");
+  $("localNames").classList.remove("hidden");
+
+};
+
+// ====================
+// ローカル：名前入力欄
+// ====================
+
+function createLocalNameInputs(){
+
+  const container =
+    $("localNameInputs");
+
+  container.innerHTML = "";
+
+  for(let i = 0; i < n; i++){
+
+    const label =
+      document.createElement("label");
+
+    label.textContent =
+      `プレイヤー ${i + 1}`;
+
+    label.style.marginTop =
+      i === 0 ? "0" : "16px";
+
+    const input =
+      document.createElement("input");
+
+    input.type = "text";
+
+    input.id =
+      `localName${i}`;
+
+    input.maxLength = 12;
+
+    input.placeholder =
+      "名前を入力";
+
+    container.appendChild(label);
+
+    container.appendChild(input);
+
+  }
+
+}
+
+// ====================
+// ローカル：名前確定
+// ====================
+
+$("localNamesNext").onclick = () => {
+
+  const players = [];
+
+  for(let i = 0; i < n; i++){
+
+    const input =
+      $(`localName${i}`);
+
+    const nameCheck =
+      validateName(input.value);
+
+    if(!nameCheck.valid){
+
+      alert(
+        `プレイヤー ${i + 1}: ` +
+        nameCheck.message
+      );
+
+      input.focus();
+
+      return;
+
+    }
+
+    players.push({
+      name: nameCheck.name,
+      number: null
+    });
+
+  }
+
+  localPlayers = players;
+
+  startLocalGame();
+
+};
+
+// ====================
+// ローカル：数字生成
+// ====================
+
+function generateLocalNumbers(){
+
+  const numbers = [];
+
+  while(numbers.length < localPlayers.length){
+
+    const number =
+      Math.floor(Math.random() * 100) + 1;
+
+    if(!numbers.includes(number)){
+
+      numbers.push(number);
+
+    }
+
+  }
+
+  localPlayers.forEach((player, index) => {
+
+    player.number =
+      numbers[index];
+
+  });
+
+}
+
+// ====================
+// ローカル：ゲーム開始
+// ====================
+
+function startLocalGame(){
+
+  generateLocalNumbers();
+
+  localCurrentPlayer = 0;
+
+  localTopic =
+    topics[
+      Math.floor(
+        Math.random() * topics.length
+      )
+    ];
+
+  $("localNames").classList.add("hidden");
+
+  $("game").classList.remove("hidden");
+
+  $("results").classList.add("hidden");
+
+  $("topic").textContent =
+    localTopic;
+
+  showLocalPlayer();
+
+}
+
+// ====================
+// ローカル：プレイヤー表示
+// ====================
+
+function showLocalPlayer(){
+
+  const player =
+    localPlayers[localCurrentPlayer];
+
+  $("player").textContent =
+    `${player.name} / ${n}`;
+
+  $("num").textContent =
+    "?";
+
+  $("hint").textContent =
+    "自分の数字を確認してください";
+
+  $("reveal").classList.remove("hidden");
+
+  $("next").classList.add("hidden");
+
+}
+
+
 
 $("onlinePlay").onclick = () => {
 
@@ -997,9 +1269,31 @@ if(room.phase === "discussion"){
 }
 
 
-$("reveal").onclick=()=>{
+$("reveal").onclick = () => {
 
-  $("num").textContent=myNumber;
+  // ローカルプレイ
+  if(localCurrentPlayer < localPlayers.length){
+
+    const player =
+      localPlayers[localCurrentPlayer];
+
+    $("num").textContent =
+      player.number;
+
+    $("hint").textContent =
+      "数字を覚えたら、隠して次のプレイヤーへ";
+
+    $("reveal").classList.add("hidden");
+
+    $("next").classList.remove("hidden");
+
+    return;
+
+  }
+
+  // オンラインプレイ
+  $("num").textContent =
+    myNumber;
 
   $("hint").textContent =
     "数字を覚えたら、隠して次のプレイヤーへ";
@@ -1011,14 +1305,57 @@ $("reveal").onclick=()=>{
 };
 
 
-$("next").onclick=async ()=>{
+$("next").onclick = async () => {
 
-  // 自分の番でなければ何もしない
+  // ====================
+  // ローカルプレイ
+  // ====================
+
+  if(gameMode === "local"){
+
+    if(
+      localCurrentPlayer <
+      localPlayers.length - 1
+    ){
+
+      localCurrentPlayer++;
+
+      showLocalPlayer();
+
+    }else{
+
+      // 全員終了
+      $("player").textContent =
+        "話し合い中…";
+
+      $("num").textContent =
+        "💬";
+
+      $("hint").textContent =
+        "みんなで数字の順番を予想してみよう！";
+
+      $("reveal").classList.add("hidden");
+
+      $("next").classList.add("hidden");
+
+      $("results").classList.remove("hidden");
+
+      showLocalResults();
+
+    }
+
+    return;
+
+  }
+
+  // ====================
+  // オンラインプレイ
+  // ====================
+
   if(myPlayerNumber !== p + 1){
     return;
   }
 
-  // 自分の番が終わったら、次のプレイヤーへ
   if(p < n - 1){
 
     const nextPlayer = p + 1;
@@ -1032,7 +1369,10 @@ $("next").onclick=async ()=>{
 
     if(error){
 
-      console.error("次のプレイヤーへの更新に失敗:", error);
+      console.error(
+        "次のプレイヤーへの更新に失敗:",
+        error
+      );
 
       alert(
         "次のプレイヤーへの更新に失敗しました\n\n" +
@@ -1043,7 +1383,6 @@ $("next").onclick=async ()=>{
 
   }else{
 
-    // 最後のプレイヤーが終わったら、話し合いフェーズへ
     const { error } = await supabaseClient
       .from("rooms")
       .update({
@@ -1053,7 +1392,10 @@ $("next").onclick=async ()=>{
 
     if(error){
 
-      console.error("話し合いフェーズへの更新に失敗:", error);
+      console.error(
+        "話し合いフェーズへの更新に失敗:",
+        error
+      );
 
       alert(
         "ゲーム状態の更新に失敗しました\n\n" +
@@ -1065,6 +1407,51 @@ $("next").onclick=async ()=>{
   }
 
 };
+
+// ====================
+// ローカル：答え合わせ
+// ====================
+
+function showLocalResults(){
+
+  const container =
+    $("resultCards");
+
+  container.innerHTML = "";
+
+  localPlayers.forEach(player => {
+
+    const card =
+      document.createElement("div");
+
+    card.className =
+      "result-card";
+
+    card.innerHTML = `
+      <div class="result-name">
+        ${player.name}
+      </div>
+
+      <div class="result-number">
+        ?
+      </div>
+    `;
+
+    card.onclick = () => {
+
+      const number =
+        card.querySelector(".result-number");
+
+      number.textContent =
+        player.number;
+
+    };
+
+    container.appendChild(card);
+
+  });
+
+}
 
 
 
