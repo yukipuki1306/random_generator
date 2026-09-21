@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6d5dfc">
+<title>ito ジェネレーター</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#222;background:#f7f7fb}
+*{box-sizing:border-box}body{margin:0;padding:20px}
+main{max-width:680px;margin:auto}
+h1{text-align:center;margin:8px 0 4px}.sub{text-align:center;color:#666;margin:0 0 20px}
+.card{background:white;border:1px solid #e5e5ed;border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 2px 10px #00000008}
+label{font-weight:700;display:block;margin-bottom:8px}
+.row{display:flex;gap:10px}.row>*{min-width:0}
+input,button{font:inherit;min-height:48px;border-radius:12px}
+input{width:100%;border:1px solid #ccc;padding:10px 14px}
+button{border:0;padding:10px 16px;font-weight:700;cursor:pointer}
+.primary{background:#6d5dfc;color:white}.secondary{background:#eeeef5;color:#222}
+.topic{text-align:center;font-size:clamp(1.3rem,5vw,2rem);font-weight:800;line-height:1.4;padding:10px 4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}
+.player{border:1px solid #e5e5ed;border-radius:16px;padding:16px;text-align:center;background:#fff}
+.player-name{font-size:.9rem;color:#777;font-weight:700}.number{font-size:3.7rem;font-weight:900;line-height:1;margin:12px 0}
+.hidden .number{filter:blur(18px);user-select:none}
+.status{text-align:center;color:#666;font-size:.9rem;margin-top:10px;min-height:1.3em}
+.actions{display:grid;gap:10px;margin-top:14px}
+.big{width:100%;font-size:1.05rem}
+.note{font-size:.85rem;color:#777;line-height:1.6}
+@media(max-width:430px){body{padding:12px}.card{padding:16px}.cards{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>🎲 ito ジェネレーター</h1>
+<p class="sub">数字を秘密に配って、みんなで価値観を比べよう</p>
+
+<section class="card">
+<label for="players">参加人数</label>
+<div class="row">
+<input id="players" type="number" min="2" max="100" value="4" inputmode="numeric">
+<button id="start" class="primary">ゲーム開始</button>
+</div>
+<p id="status" class="status"></p>
+</section>
+
+<section id="dealArea" class="card" hidden>
+<h2>🔐 数字を秘密に配る</h2>
+<p id="turn" style="font-weight:700"></p>
+<div id="secret" class="player">
+<div class="player-name" id="secretPlayer"></div>
+<div id="secretNumber" class="number">?</div>
+<button id="reveal" class="primary big">数字を見る</button>
+<button id="hide" class="secondary big" hidden>数字を隠して次へ</button>
+</div>
+</section>
+
+<section class="card">
+<h2>💡 お題</h2>
+<div id="topic" class="topic">ゲーム開始後に表示されます</div>
+<button id="newTopic" class="secondary big">お題を引き直す</button>
+</section>
+
+<section id="summaryArea" class="card" hidden>
+<h2>🎯 配られた数字</h2>
+<p class="note">ゲーム終了後に確認できます。並べ替えの答え合わせなどに使ってください。</p>
+<div id="summary" class="cards"></div>
+</section>
+
+<section class="actions">
+<button id="newGame" class="primary big">✨ 新しいゲーム</button>
+</section>
+</main>
+
+<script>
+const TOPICS = ["好きな食べ物", "怖いもの", "テンションが上がること", "嬉しいプレゼント", "休日にしたいこと", "住んでみたい場所", "人生で大切なもの", "なくなったら困るもの", "友達にされたら嬉しいこと", "恋人にされたら嬉しいこと", "超能力として欲しい能力", "憧れる職業", "かわいい動物", "高級そうなもの", "地味に嬉しいこと", "絶対にやりたくないこと", "100万円あったら買いたいもの", "尊敬できる人", "一緒に働きたい人", "仲良くなりたい人", "信頼できる行動", "許せない行動", "人生で重要なこと", "大人っぽいと思うもの", "子どもっぽいと思うもの", "やらかしたら恥ずかしいこと", "朝起きて最初にしたいこと", "コンビニでつい買ってしまうもの", "恋人にされたら嫌なこと", "デートで嬉しいこと", "好きな人に言われたい言葉", "恋人に求めるもの", "友情に大切なこと", "1日だけなれるならなりたいもの", "1億円あったらしたいこと", "タイムスリップするなら行きたい時代", "無人島に持っていきたいもの", "1週間休みがあったらしたいこと", "生まれ変わったらなりたいもの", "苦手な食べ物", "毎日食べても飽きないもの", "深夜に食べたくなるもの", "高級だと思う食べ物", "ご褒美として食べたいもの", "給食で嬉しかったもの"];
+let numbers=[], current=0, revealed=false;
+
+const $ = id => document.getElementById(id);
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a;
+}
+function randomTopic(){
+  $("topic").textContent = TOPICS[Math.floor(Math.random()*TOPICS.length)];
+}
+function validPlayers(){
+  let n=parseInt($("players").value,10);
+  if(!Number.isFinite(n)) n=4;
+  n=Math.max(2,Math.min(100,n));
+  $("players").value=n;
+  return n;
+}
+function startGame(){
+  const n=validPlayers();
+  numbers=shuffle(Array.from({length:100},(_,i)=>i+1)).slice(0,n);
+  current=0; revealed=false;
+  $("dealArea").hidden=false;
+  $("summaryArea").hidden=true;
+  $("secretNumber").textContent="?";
+  $("reveal").hidden=false;
+  $("hide").hidden=true;
+  $("status").textContent=`${n}人分の数字を重複なしで用意しました。`;
+  showTurn();
+  randomTopic();
+}
+function showTurn(){
+  const n=numbers.length;
+  $("turn").textContent=`プレイヤー ${current+1} / ${n}`;
+  $("secretPlayer").textContent=`プレイヤー ${current+1}`;
+  $("secretNumber").textContent=revealed ? numbers[current] : "?";
+}
+$("start").addEventListener("click",startGame);
+$("newGame").addEventListener("click",startGame);
+$("newTopic").addEventListener("click",randomTopic);
+$("reveal").addEventListener("click",()=>{
+  revealed=true; showTurn(); $("reveal").hidden=true; $("hide").hidden=false;
+});
+$("hide").addEventListener("click",()=>{
+  revealed=false;
+  if(current < numbers.length-1){
+    current++; showTurn();
+    $("status").textContent="スマホを次のプレイヤーに渡してください。";
+  }else{
+    $("dealArea").hidden=true;
+    $("summaryArea").hidden=false;
+    $("status").textContent="全員への配布が完了しました。";
+    $("summary").innerHTML=numbers.map((x,i)=>`<div class="player"><div class="player-name">プレイヤー ${i+1}</div><div class="number">${x}</div></div>`).join("");
+  }
+});
+startGame();
+</script>
+</body>
+</html>
