@@ -406,6 +406,7 @@ const topics = [
 
 let nums = [];
 let myNumber = null;
+let myPlayerNumber = null;
 let p = 0;
 let n = 4;
 let roomCode = "";
@@ -539,6 +540,8 @@ if(playerError){
 // PLAYER 1の数字を保存
 myNumber = nums[0];
 
+myPlayerNumber = 1;
+
 console.log("PLAYER 1 登録成功");
 
 
@@ -564,7 +567,7 @@ subscribeToRoom(roomCode);
 
 
 $("start").onclick=start;
-
+$("join").onclick=joinRoom;
 
 async function joinRoom(){
 
@@ -696,8 +699,9 @@ async function joinRoom(){
 
 
   // 自分のゲーム情報
-  n = room.player_count;
+n = room.player_count;
 p = room.current_player;
+myPlayerNumber = playerNumber;
 
 // 自分の数字を保存
 nums = [myNumber];
@@ -775,7 +779,17 @@ function subscribeToRoom(roomCode){
   $("hint").textContent =
     "自分の数字を確認してください";
 
-  $("reveal").classList.remove("hidden");
+  // 自分の番なら数字を見るボタンを表示
+  if(myPlayerNumber === p + 1){
+
+    $("reveal").classList.remove("hidden");
+
+  }else{
+
+    $("reveal").classList.add("hidden");
+
+  }
+
   $("next").classList.add("hidden");
 
 }
