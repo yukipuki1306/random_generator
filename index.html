@@ -251,7 +251,16 @@ button.cream{
 
 <h2>ゲームを作る</h2>
 
-<label for="count">参加人数</label>
+<label for="hostName">あなたの名前</label>
+
+<input
+  id="hostName"
+  type="text"
+  maxlength="12"
+  placeholder="例：りこ"
+>
+
+<label for="count" style="margin-top:16px;">参加人数</label>
 
 <input
   id="count"
@@ -277,6 +286,15 @@ button.cream{
   maxlength="6"
   placeholder="例：ABC123"
   style="text-transform:uppercase;"
+>
+
+<label for="playerName" style="margin-top:16px;">あなたの名前</label>
+
+<input
+  id="playerName"
+  type="text"
+  maxlength="12"
+  placeholder="例：たろう"
 >
 
 <button id="join" class="secondary">
@@ -408,12 +426,50 @@ const topics = [
 let nums = [];
 let myNumber = null;
 let myPlayerNumber = null;
+let myPlayerName = "";
 let p = 0;
 let n = 4;
 let roomCode = "";
 
 
 const $ = id => document.getElementById(id);
+
+
+// 名前のチェック
+function validateName(name){
+
+  name = name.trim();
+
+  if(!name){
+    return {
+      valid:false,
+      message:"名前を入力してください"
+    };
+  }
+
+  // 日本語など、英数字以外の文字が含まれているか
+  const hasNonAlphanumeric = /[^a-zA-Z0-9]/.test(name);
+
+  const maxLength = hasNonAlphanumeric ? 10 : 12;
+
+  if(name.length > maxLength){
+
+    return {
+      valid:false,
+      message:
+        hasNonAlphanumeric
+          ? "日本語を含む名前は10文字以内にしてください"
+          : "英数字の名前は12文字以内にしてください"
+    };
+
+  }
+
+  return {
+    valid:true,
+    name:name
+  };
+
+}
 
 
 function shuffle(a){
@@ -456,6 +512,22 @@ function update(){
 
 
 async function start(){
+
+  // 名前をチェック
+  const nameCheck = validateName($("hostName").value);
+
+  if(!nameCheck.valid){
+
+    alert(nameCheck.message);
+
+    $("hostName").focus();
+
+    return;
+
+  }
+
+  const playerName = nameCheck.name;
+
 
   n=Math.max(
     2,
@@ -518,7 +590,7 @@ const { error: playerError } = await supabaseClient
   .insert({
     room_code: roomCode,
     player_number: 1,
-    name: "PLAYER 1",
+    name: playerName,
     number: nums[0]
   });
 
@@ -574,6 +646,22 @@ $("join").onclick=()=>{
 };
 
 async function joinRoom(){
+
+  // 名前をチェック
+  const nameCheck = validateName($("playerName").value);
+
+  if(!nameCheck.valid){
+
+    alert(nameCheck.message);
+
+    $("playerName").focus();
+
+    return;
+
+  }
+
+  const playerName = nameCheck.name;
+
 
   roomCode =
     $("roomCode").value.trim().toUpperCase();
@@ -674,11 +762,11 @@ async function joinRoom(){
     await supabaseClient
       .from("players")
       .insert({
-        room_code: roomCode,
-        player_number: playerNumber,
-        name: `PLAYER ${playerNumber}`,
-        number: myNumber
-      });
+  room_code: roomCode,
+  player_number: playerNumber,
+  name: playerName,
+  number: myNumber
+});
 
 
   if(playerError){
@@ -740,9 +828,9 @@ subscribeToRoom(roomCode);
 
 
   alert(
-    `PLAYER ${playerNumber} として参加しました！\n\n` +
-    "ルームコード: " + roomCode
-  );
+  `${playerName} として参加しました！\n\n` +
+  "ルームコード: " + roomCode
+);
 
 }
 
@@ -775,8 +863,7 @@ function subscribeToRoom(roomCode){
 
         if(room.phase === "playing"){
 
-  $("player").textContent =
-    `プレイヤー ${p + 1} / ${n}`;
+  showCurrentPlayerName();
 
   $("num").textContent = "?";
 
@@ -897,10 +984,10 @@ $("next").onclick=async ()=>{
 async function showResults(){
 
   const { data: players, error } = await supabaseClient
-    .from("players")
-    .select("player_number, number")
-    .eq("room_code", roomCode)
-    .order("player_number", { ascending: true });
+  .from("players")
+  .select("player_number, name, number")
+  .eq("room_code", roomCode)
+  .order("player_number", { ascending: true });
 
 
   if(error){
@@ -946,8 +1033,8 @@ async function showResults(){
         <div class="card-face card-back">
 
           <div class="card-player">
-            PLAYER ${player.player_number}
-          </div>
+  ${player.name}
+</div>
 
           <div class="card-symbol">
             ?
