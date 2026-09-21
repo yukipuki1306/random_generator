@@ -501,10 +501,38 @@ async function start(){
 
   console.log("部屋作成成功:", roomCode);
 
-  // 画面をゲーム画面にする
-  $("setup").classList.add("hidden");
-  $("game").classList.remove("hidden");
-  $("results").classList.add("hidden");
+
+// PLAYER 1として登録
+const { error: playerError } = await supabaseClient
+  .from("players")
+  .insert({
+    room_code: roomCode,
+    player_number: 1,
+    name: "PLAYER 1",
+    number: nums[0]
+  });
+
+
+if(playerError){
+
+  console.error("プレイヤー登録エラー:", playerError);
+
+  alert(
+    "プレイヤー登録に失敗しました\n\n" +
+    "code: " + playerError.code + "\n" +
+    "message: " + playerError.message
+  );
+
+  return;
+
+}
+
+
+console.log("PLAYER 1 登録成功");
+
+
+// 画面をゲーム画面にする
+$("setup").classList.add("hidden");
 
   // お題を表示
   $("topic").textContent =
