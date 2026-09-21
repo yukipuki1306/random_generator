@@ -477,16 +477,21 @@ async function start(){
 
   p=0;
 
-  // Supabaseに部屋を作る
-  const { error } = await supabaseClient
-  .from("rooms")
-  .insert({
-    room_code: roomCode,
-    topic: topics[Math.floor(Math.random()*topics.length)],
-    player_count: n,
-    current_player: 0,
-    phase: "playing"
-  });
+  // お題を1つ決める
+const selectedTopic =
+  topics[Math.floor(Math.random()*topics.length)];
+
+
+// Supabaseに部屋を作る
+const { error } = await supabaseClient
+.from("rooms")
+.insert({
+  room_code: roomCode,
+  topic: selectedTopic,
+  player_count: n,
+  current_player: 0,
+  phase: "playing"
+});
 
   if(error){
 
@@ -505,6 +510,7 @@ async function start(){
 
 
 // PLAYER 1として登録
+// PLAYER 1として登録
 const { error: playerError } = await supabaseClient
   .from("players")
   .insert({
@@ -512,8 +518,29 @@ const { error: playerError } = await supabaseClient
     player_number: 1,
     name: "PLAYER 1",
     number: nums[0]
-    myNumber = nums[0];
   });
+
+
+if(playerError){
+
+  console.error("プレイヤー登録エラー:", playerError);
+
+  alert(
+    "プレイヤー登録に失敗しました\n\n" +
+    "code: " + playerError.code + "\n" +
+    "message: " + playerError.message
+  );
+
+  return;
+
+}
+
+
+// PLAYER 1の数字を保存
+myNumber = nums[0];
+
+
+console.log("PLAYER 1 登録成功");
 
 
 if(playerError){
@@ -540,8 +567,7 @@ $("game").classList.remove("hidden");
 $("results").classList.add("hidden");
 
 // お題を表示
-$("topic").textContent =
-  topics[Math.floor(Math.random()*topics.length)];
+$("topic").textContent = selectedTopic;
 
 update();
 subscribeToRoom(roomCode);  
@@ -646,10 +672,10 @@ async function joinRoom(){
     players.map(player => player.number);
 
 
-  const myNumber =
-    availableNumbers.find(
-      number => !usedNumbers.includes(number)
-    );
+  myNumber =
+  availableNumbers.find(
+    number => !usedNumbers.includes(number)
+  );
 
 
   // PLAYERとして登録
@@ -860,39 +886,59 @@ $("next").onclick=async ()=>{
 };
 
 
-function showResults(){
+async function showResults(){
 
-  $("all").innerHTML="";
+  const { data: players, error } = await supabaseClient
+    .from("players")
+    .select("player_number, number")
+    .eq("room_code", roomCode)
+    .order("player_number", { ascending: true });
 
-  const title=document.createElement("div");
 
-  title.className="discussion-title";
+  if(error){
 
-  title.textContent="答え合わせする";
+    console.error("答え合わせ情報の取得に失敗:", error);
+
+    $("all").innerHTML =
+      "<p>答え合わせ情報を取得できませんでした。</p>";
+
+    return;
+
+  }
+
+
+  $("all").innerHTML = "";
+
+
+  const title = document.createElement("div");
+
+  title.className = "discussion-title";
+
+  title.textContent = "答え合わせする";
 
   $("all").appendChild(title);
 
 
-  const cardsContainer=document.createElement("div");
+  const cardsContainer = document.createElement("div");
 
-  cardsContainer.className="cards-container";
-
-
-  nums.forEach((num,index)=>{
-
-    const card=document.createElement("div");
-
-    card.className="result-card";
+  cardsContainer.className = "cards-container";
 
 
-    card.innerHTML=`
+  players.forEach(player => {
+
+    const card = document.createElement("div");
+
+    card.className = "result-card";
+
+
+    card.innerHTML = `
 
       <div class="card-inner">
 
         <div class="card-face card-back">
 
           <div class="card-player">
-            PLAYER ${index+1}
+            PLAYER ${player.player_number}
           </div>
 
           <div class="card-symbol">
@@ -909,11 +955,11 @@ function showResults(){
         <div class="card-face card-front">
 
           <div class="card-player">
-            PLAYER ${index+1}
+            PLAYER ${player.player_number}
           </div>
 
           <div class="result-number">
-            ${num}
+            ${player.number}
           </div>
 
           <div class="card-tap">
@@ -927,12 +973,21 @@ function showResults(){
     `;
 
 
-    card.addEventListener("click",()=>{
+    card.addEventListener("click", () => {
 
       card.classList.toggle("flipped");
 
     });
 
+
+    cardsContainer.appendChild(card);
+
+  });
+
+
+  $("all").appendChild(cardsContainer);
+
+}
 
     cardsContainer.appendChild(card);
 
